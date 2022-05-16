@@ -1,46 +1,25 @@
-# Advanced Sample Hardhat Project
-
-This project demonstrates an advanced Hardhat use case, integrating other tools commonly used alongside Hardhat in the ecosystem.
-
-The project comes with a sample contract, a test for that contract, a sample script that deploys that contract, and an example of a task implementation, which simply lists the available accounts. It also comes with a variety of other tools, preconfigured to work with the project code.
-
-Try running some of the following tasks:
-
-```shell
-npx hardhat accounts
-npx hardhat compile
-npx hardhat clean
-npx hardhat test
-npx hardhat node
-npx hardhat help
-REPORT_GAS=true npx hardhat test
-npx hardhat coverage
-npx hardhat run scripts/deploy.ts
-TS_NODE_FILES=true npx ts-node scripts/deploy.ts
-npx eslint '**/*.{js,ts}'
-npx eslint '**/*.{js,ts}' --fix
-npx prettier '**/*.{json,sol,md}' --check
-npx prettier '**/*.{json,sol,md}' --write
-npx solhint 'contracts/**/*.sol'
-npx solhint 'contracts/**/*.sol' --fix
+# Process
+## 0. Setup
+Before running any scripts I set up the following environment variables in `.env`:
 ```
-
-# Etherscan verification
-
-To try out Etherscan verification, you first need to deploy a contract to an Ethereum network that's supported by Etherscan, such as Ropsten.
-
-In this project, copy the .env.example file to a file named .env, and then edit it to fill in the details. Enter your Etherscan API key, your Ropsten node URL (eg from Alchemy), and the private key of the account which will send the deployment transaction. With a valid .env file in place, first deploy your contract:
-
-```shell
-hardhat run --network ropsten scripts/deploy.ts
+ALCHEMY_API_KEY
+PRIVATE_KEY
 ```
-
-Then, copy the deployment address and paste it in to replace `DEPLOYED_CONTRACT_ADDRESS` in this command:
-
-```shell
-npx hardhat verify --network ropsten DEPLOYED_CONTRACT_ADDRESS "Hello, Hardhat!"
+These are used to deploy the contract as I do so using the `ethers.AlchemyProvider`.
+## 1. Deployment
+I deployed the contract using command `yarn run deploy`. This deployed a ballot contract with 2 hardcoded proposals:
 ```
+a: Buy ETH
+b: Buy Luna
+```
+Additionally, this printed the contract address to the console, which I then saved as the `CONTRACT_ADDRESS` env var, to make the later steps simpler.
+## 2. Giving voting rights
+I then gave voting rights to 3 new accounts, by running `yarn run giveVotingRghts -a ...` with the 3 addresses.
+## 3. Voting, delegating, and checking the results
+I voted with the first account by running `yarn run voteForProposal -p 0`, and checked the winning proposal using the commands `yarn run queryProposal -p 0` and 
+`yarn run queryVotingResult` to ensure this worked. And it did - the first command revealed that 1 vote had been cast for proposal 0, and the second command revealed that proposal 0 was currently winning.
 
-# Performance optimizations
+After this, I then delegated the vote from the 2nd new account to that of the 1st using `yarn run delegate -a ...`. As the 1st account had already voted for proposal 0, this updated the votes for proposal 0 from 1 to 2. I verified this using `yarn run queryProposal -p 0`.
 
-For faster runs of your tests and scripts, consider skipping ts-node's type checking by setting the environment variable `TS_NODE_TRANSPILE_ONLY` to `1` in hardhat's environment. For more details see [the documentation](https://hardhat.org/guides/typescript.html#performance-optimizations).
+Finally, with the 3rd new account I voted for proposal 1, before verifying that 0 remained the winning proposal and that the votes had been cast as expected, by running the scripts to query each proposal and to query the voting result.
+
